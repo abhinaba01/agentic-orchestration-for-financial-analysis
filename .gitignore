@@ -42,7 +42,11 @@ desktop.ini
 # ── Test Input Documents ──────────────────────────────────────────────────────
 *.pdf
 *.htm
-*.html
+# Note: index.html is the web UI and should be tracked
+
+# ── Temp/Cache HTML ────────────────────────────────────────────────────────
+/test*.html
+/temp*.html
 
 # ── Logs ─────────────────────────────────────────────────────────────────────
 *.log

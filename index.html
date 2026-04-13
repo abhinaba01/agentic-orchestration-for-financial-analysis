@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Analyst — Financial Orchestration</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Playfair Display (Serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        body {
+            background-color: #F4F4F2;
+            color: #1A1A1A;
+            transition: all 0.5s ease;
+        }
+        
+        .divider {
+            border-top: 1px solid rgba(26, 26, 26, 0.1);
+        }
+        
+        .text-link {
+            cursor: pointer;
+            text-decoration: underline;
+            transition: opacity 0.3s ease;
+        }
+        
+        .text-link:hover {
+            opacity: 0.7;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        .processing {
+            opacity: 0.5;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .sentiment-positive {
+            color: #059669;
+        }
+        
+        .sentiment-negative {
+            color: #DC2626;
+        }
+        
+        .sentiment-neutral {
+            color: #6B7280;
+        }
+        
+        .chain-of-thought {
+            background-color: #FFF;
+            border: 1px solid rgba(26, 26, 26, 0.05);
+            border-radius: 2px;
+            padding: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .button-outline {
+            border: 1px solid #1A1A1A;
+            background-color: transparent;
+            color: #1A1A1A;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .button-outline:hover {
+            background-color: #1A1A1A;
+            color: #F4F4F2;
+        }
+        
+        .input-field {
+            border: 1px solid rgba(26, 26, 26, 0.1);
+            background-color: #FFF;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #1A1A1A;
+            box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.1);
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .kpi-item {
+            transition: all 0.3s ease;
+        }
+        
+        .kpi-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .fade-in-delay-1 {
+            animation: fadeIn 0.5s ease 0.1s forwards;
+            opacity: 0;
+        }
+        
+        .fade-in-delay-2 {
+            animation: fadeIn 0.5s ease 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .fade-in-delay-3 {
+            animation: fadeIn 0.5s ease 0.3s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Header / Hero Section -->
+        <header class="relative px-8 py-24 md:py-32 text-center mb-12">
+            <h1 class="text-6xl md:text-8xl font-light tracking-tight mb-4">
+                The Analyst
+            </h1>
+            <p class="text-xl md:text-2xl font-light italic text-gray-600 mb-2">
+                Autonomous Financial Orchestration
+            </p>
+            <div class="divider mt-8"></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 px-8 md:px-16 max-w-6xl mx-auto w-full">
+            
+            <!-- Stage 1: Ingestion -->
+            <section id="stage-ingestion" class="mb-16 fade-in">
+                <div class="mb-8">
+                    <label for="file-input" class="text-link text-lg">
+                        Ingest Document —
+                    </label>
+                    <input type="file" id="file-input" accept=".pdf,.txt,.docx" />
+                    <div id="processing-indicator" class="mt-4 processing hidden">
+                        Processing...
+                    </div>
+                </div>
+                <div class="divider"></div>
+            </section>
+
+            <!-- Stage 2: Dashboard (Hidden until document processed) -->
+            <section id="stage-dashboard" class="hidden mb-16">
+                
+                <!-- Executive Summary -->
+                <div class="mb-12 fade-in">
+                    <h2 class="text-3xl md:text-4xl font-light mb-6">Executive Summary</h2>
+                    <div class="bg-white border border-gray-100 rounded-none p-8">
+                        <p id="summary-text" class="text-lg leading-relaxed text-gray-700"></p>
+                    </div>
+                </div>
+
+                <!-- Company Info -->
+                <div class="mb-12 fade-in-delay-1">
+                    <h3 class="text-2xl font-light mb-6 italic">Company Overview</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase tracking-wider mb-2">Company</p>
+                            <p id="company-name" class="text-xl font-light"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase tracking-wider mb-2">Overall Sentiment</p>
+                            <p id="sentiment-overall" class="text-xl font-light"></p>
+                        </div>
+                    </div>
+                    <div class="divider mt-8"></div>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="mb-12 fade-in-delay-2">
+                    <h3 class="text-2xl font-light mb-6 italic">Key Performance Indicators</h3>
+                    <div class="kpi-grid" id="kpi-grid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <div class="divider mt-8"></div>
+                </div>
+
+                <!-- Sentiment Gauge -->
+                <div class="mb-12 fade-in-delay-3">
+                    <h3 class="text-2xl font-light mb-6 italic">Market Outlook</h3>
+                    <div id="sentiment-gauge" class="text-2xl font-light">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <div class="divider mt-8"></div>
+                </div>
+
+            </section>
+
+            <!-- Stage 3: Interactive Q&A (Hidden until document processed) -->
+            <section id="stage-qa" class="hidden mb-16">
+                <h2 class="text-3xl md:text-4xl font-light mb-8">Ask the Document</h2>
+                
+                <div class="mb-12">
+                    <input 
+                        type="text" 
+                        id="qa-input" 
+                        placeholder="Ask the document..." 
+                        class="input-field"
+                        disabled
+                    />
+                </div>
+
+                <!-- Q&A Results -->
+                <div id="qa-results" class="space-y-8">
+                    <!-- Populated by JavaScript -->
+                </div>
+
+                <div class="divider mt-8"></div>
+            </section>
+
+        </main>
+
+        <!-- Stage 4: Export Footer -->
+        <footer id="footer-export" class="hidden sticky bottom-0 px-8 py-6 bg-white border-t border-gray-200 flex justify-center gap-6">
+            <button id="download-btn" class="button-outline">
+                Download Report
+            </button>
+            <button id="reset-btn" class="button-outline">
+                Start Over
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Hidden file input for download -->
+    <a id="download-link" style="display:none;"></a>
+
+    <!-- JavaScript -->
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        
+        let currentDocumentId = '';
+
+        // ====================================================================
+        // Event Listeners
+        // ====================================================================
+
+        document.getElementById('file-input').addEventListener('change', handleFileUpload);
+        document.getElementById('qa-input').addEventListener('keypress', handleQAInput);
+        document.getElementById('download-btn')?.addEventListener('click', downloadReport);
+        document.getElementById('reset-btn')?.addEventListener('click', resetApplication);
+
+        document.querySelectorAll('.toggle-cot').forEach(btn => {
+            btn.addEventListener('click', toggleChainOfThought);
+        });
+
+        // ====================================================================
+        // File Upload Handler
+        // ====================================================================
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const processingIndicator = document.getElementById('processing-indicator');
+            processingIndicator.classList.remove('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentDocumentId = data.document_id;
+
+                // Populate dashboard
+                populateDashboard(data);
+
+                // Show dashboard and Q&A
+                document.getElementById('stage-dashboard').classList.remove('hidden');
+                document.getElementById('stage-qa').classList.remove('hidden');
+                document.getElementById('footer-export').classList.remove('hidden');
+
+                // Enable Q&A input
+                document.getElementById('qa-input').disabled = false;
+
+                processingIndicator.classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error processing document:', error);
+                processingIndicator.textContent = `Error: ${error.message}`;
+                processingIndicator.classList.remove('processing');
+            }
+        }
+
+        // ====================================================================
+        // Dashboard Population
+        // ====================================================================
+
+        function populateDashboard(data) {
+            // Company name
+            document.getElementById('company-name').textContent = data.company_name || 'Unknown';
+
+            // Overall sentiment with color
+            const sentimentEl = document.getElementById('sentiment-overall');
+            sentimentEl.textContent = data.overall_sentiment;
+            sentimentEl.classList.add(`sentiment-${data.overall_sentiment.toLowerCase()}`);
+
+            // Summary
+            document.getElementById('summary-text').textContent = data.summary;
+
+            // KPI Grid
+            const kpiGrid = document.getElementById('kpi-grid');
+            kpiGrid.innerHTML = '';
+            
+            if (data.kpis && typeof data.kpis === 'object') {
+                Object.entries(data.kpis).forEach(([key, value], index) => {
+                    const kpiItem = document.createElement('div');
+                    kpiItem.className = 'kpi-item';
+                    kpiItem.innerHTML = `
+                        <p class="text-sm text-gray-500 uppercase tracking-wider mb-2">${key}</p>
+                        <p class="text-2xl font-light">${value}</p>
+                    `;
+                    kpiGrid.appendChild(kpiItem);
+                });
+            }
+
+            // Sentiment gauge (placeholder)
+            const sentimentGauge = document.getElementById('sentiment-gauge');
+            sentimentGauge.innerHTML = `
+                <span class="sentiment-${data.overall_sentiment.toLowerCase()}">
+                    Outlook: <strong>${data.overall_sentiment}</strong>
+                </span>
+            `;
+        }
+
+        // ====================================================================
+        // Q&A Handler
+        // ====================================================================
+
+        async function handleQAInput(event) {
+            if (event.key !== 'Enter') return;
+
+            const qaInput = document.getElementById('qa-input');
+            const query = qaInput.value.trim();
+            if (!query) return;
+
+            qaInput.disabled = true;
+            const qaInput_placeholder = qaInput.placeholder;
+            qaInput.placeholder = 'Thinking...';
+
+            try {
+                const response = await fetch(`${API_BASE}/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayQAResult(data);
+
+                // Clear input
+                qaInput.value = '';
+
+            } catch (error) {
+                console.error('Error asking question:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                qaInput.disabled = false;
+                qaInput.placeholder = qaInput_placeholder;
+            }
+        }
+
+        function displayQAResult(data) {
+            const qaResults = document.getElementById('qa-results');
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'fade-in';
+            resultDiv.innerHTML = `
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-4">${data.query}</h4>
+                    <p class="text-lg leading-relaxed text-gray-700 mb-6">${data.answer}</p>
+                    <button class="toggle-cot text-sm underline text-gray-600 hover:text-gray-900">
+                        View Logic
+                    </button>
+                    <div class="chain-of-thought hidden mt-4">
+                        <p class="font-semibold text-sm mb-3">Chain of Thought:</p>
+                        <p class="text-sm text-gray-600">${data.chain_of_thought}</p>
+                        <p class="text-xs text-gray-500 mt-3">Evidence chunks: ${data.evidence_count}</p>
+                    </div>
+                </div>
+                <div class="divider"></div>
+            `;
+            
+            qaResults.insertBefore(resultDiv, qaResults.firstChild);
+
+            // Attach toggle listener
+            resultDiv.querySelector('.toggle-cot').addEventListener('click', toggleChainOfThought);
+        }
+
+        function toggleChainOfThought(event) {
+            const cotDiv = event.target.closest('div').querySelector('.chain-of-thought');
+            cotDiv.classList.toggle('hidden');
+            event.target.textContent = cotDiv.classList.contains('hidden') ? 'View Logic' : 'Hide Logic';
+        }
+
+        // ====================================================================
+        // Export Handler
+        // ====================================================================
+
+        async function downloadReport() {
+            try {
+                const response = await fetch(`${API_BASE}/report/download`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to download report');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.getElementById('download-link');
+                link.href = url;
+                link.download = `financial_report_${new Date().toISOString().slice(0, 10)}.json`;
+                link.click();
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // ====================================================================
+        // Reset Handler
+        // ====================================================================
+
+        function resetApplication() {
+            // Reset UI
+            document.getElementById('stage-dashboard').classList.add('hidden');
+            document.getElementById('stage-qa').classList.add('hidden');
+            document.getElementById('footer-export').classList.add('hidden');
+            document.getElementById('qa-results').innerHTML = '';
+            document.getElementById('qa-input').value = '';
+            document.getElementById('qa-input').disabled = true;
+            document.getElementById('file-input').value = '';
+
+            currentDocumentId = '';
+        }
+
+    </script>
+
+</body>
+</html>
