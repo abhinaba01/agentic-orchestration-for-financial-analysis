@@ -53,14 +53,29 @@ class NERAgent:
             self.mode = "fallback"
             self.tokenizer = None
             self.model = None
-
+    
     def _map_label(self, raw_label: str) -> str:
         """Map raw model labels to simplified financial entity categories."""
-        label = raw_label.upper()
+        label = raw_label.upper().replace("B-", "").replace("I-", "")
+        
+        # FiNER-139 XBRL numeric tags → METRIC
+        xbrl_money = {
+            "ASSETS", "LIABILITIES", "REVENUE", "NETINCOME", "GROSSPROFIT",
+            "OPERATINGINCOME", "EPS", "EARNINGSPERSHARE", "CASHFLOW",
+            "STOCKHOLDERSEQUITY", "LONGTERMDEBT", "COMMONSTOCKSHARES",
+            "COMMONSTOCKSHARESAUTHORIZED", "COMMONSTOCKSHARESOUTSTANDING",
+        }
+        for xbrl in xbrl_money:
+            if xbrl in label.replace("-", "").replace("_", ""):
+                return "MONEY"
+
+        # Standard NER labels (fallback model dslim/bert-base-NER)
         if "ORG" in label:
             return "ORG"
         if "PER" in label or "PERSON" in label:
             return "PERSON"
+        if "LOC" in label or "GPE" in label:
+            return "LOCATION"
         if "MONEY" in label or "MON" in label:
             return "MONEY"
         if "PERCENT" in label:
@@ -70,12 +85,38 @@ class NERAgent:
         if "TICKER" in label or "STOCK" in label:
             return "TICKER"
         return "METRIC"
-
+    
+    def _extract_orgs_with_spacy(self, text: str) -> list[NERResult]:
+        """Use spaCy to extract ORG, PERSON, GPE entities that FiNER-139 misses."""
+        try:
+            import spacy
+            nlp = spacy.load("en_core_web_sm")
+            doc = nlp(text[:50000])  # limit to first 50k chars
+            results = []
+            for ent in doc.ents:
+                if ent.label_ in ("ORG", "PERSON", "GPE", "NORP"):
+                    mapped = "ORG" if ent.label_ == "ORG" else \
+                            "PERSON" if ent.label_ == "PERSON" else "LOCATION"
+                    results.append(NERResult(
+                        entity_text=ent.text.strip(),
+                        entity_type=mapped,
+                        confidence=0.85,
+                        start=ent.start_char,
+                        end=ent.end_char,
+                    ))
+            return results
+        except Exception:
+            return []
+        
     def extract(self, text: str) -> list[NERResult]:
         """Run NER on text and return deduplicated entity spans."""
         if self.mode == "onnx":
-            return self._extract_onnx(text)
+            onnx_results = self._extract_onnx(text)
+            spacy_results = self._extract_orgs_with_spacy(text)
+            return self._deduplicate_entities(onnx_results + spacy_results)
         return self._extract_fallback(text)
+        
+   
 
     def _extract_onnx(self, text: str) -> list[NERResult]:
         """Run inference using the ONNX model and decode BIO tags into spans."""

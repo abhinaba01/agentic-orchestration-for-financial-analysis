@@ -38,16 +38,27 @@ class ReportGenerator:
         rag_answers: List[RAGResult],
     ) -> FinancialReport:
         """Build a FinancialReport dataclass from parsing and agent outputs."""
+
+        
+
         org_entities = [
             result.entity_text
             for result in ner_results
             if result.entity_type == "ORG"
         ]
-        company_name = (
-            max(set(org_entities), key=org_entities.count)
-            if org_entities
-            else "unknown"
-        )
+        if org_entities:
+            company_name = max(set(org_entities), key=org_entities.count)
+        else:
+            import re
+            text_sample = getattr(parsed_doc, 'raw_text', '')[:500]
+            match = re.search(
+                r'([A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+){0,4}'
+                r'(?:\s+(?:Holdings|Brothers|Group|Corporation|Corp|Inc|Ltd|LLC|LP|Partners)\.?))',
+                text_sample
+            )
+            company_name = match.group(0).strip() if match else "unknown"
+        
+        
         date_entities = [
             result.entity_text
             for result in ner_results
@@ -201,3 +212,8 @@ class ReportGenerator:
         with open(output_path, "w", encoding="utf-8") as file_handle:
             file_handle.write("\n".join(lines))
         print(f"Markdown report saved to {output_path}")
+
+    
+    
+    
+        
